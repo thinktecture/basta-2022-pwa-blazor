@@ -1,4 +1,6 @@
-﻿export async function createImage(stream) {
+﻿let image = null;
+
+export async function createImage(stream) {
     cleanUpImage();
     const arrayBuffer = await stream.arrayBuffer();
     const blob = new Blob([arrayBuffer]);
@@ -32,7 +34,38 @@ export async function getCanvasImageData(referenceCanvasId) {
     
 }
 
-export async function readImage(imageBlob) {
+export async function openNewFile(imageBlob) {
     cleanUpImage();
     return createImageElement(imageBlob)
+}
+
+export async function generateFile(dataUrl) {
+    const blob = await (await fetch(dataUrl)).blob();
+    return new File([blob], 'paint.png', { type: 'image/png' });
+}
+
+function createImageElement(blob, returnValue) {
+    return new Promise((resolve, reject) => {
+        const imageRef = new Image();
+        imageRef.onload = () => {
+            image = document.getElementById(imageRef.id);
+            resolve(returnValue);
+        };
+        imageRef.onerror = () => {
+            imageRef.remove();
+            reject();
+        };
+        imageRef.src = URL.createObjectURL(blob);
+        imageRef.style.display = 'none';
+        imageRef.id = 'image';
+
+        document.body.appendChild(imageRef);
+    });
+}
+
+function cleanUpImage() {
+    if (image) {
+        image.remove();
+        image = null;
+    }
 }

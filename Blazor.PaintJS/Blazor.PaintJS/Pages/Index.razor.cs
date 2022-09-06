@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Drawing;
 using KristofferStrube.Blazor.FileSystemAccess;
+using Thinktecture.Blazor.WebShare;
+using Thinktecture.Blazor.WebShare.Models;
 
 namespace Blazor.PaintJS.Pages
 {
@@ -13,13 +15,11 @@ namespace Blazor.PaintJS.Pages
     {
         [Inject] private PaintService _paintService { get; set; } = default!;
         [Inject] private ImageService _imageService { get; set; } = default!;
-        [Inject] private ClipboardService _clipboardService { get; set; } = default!;
-        [Inject] private ShareService _shareService { get; set; } = default!;
+        // [Inject] private ClipboardService _clipboardService { get; set; } = default!;
+        [Inject] private WebShareService _shareService { get; set; } = default!;
         [Inject] private FileSystemAccessService _fileSystemAccessService { get; set; } = default!;
         [Inject] public IJSRuntime JS { get; set; } = default!;
 
-
-        private long maxFileSize = 1024 * 15 * 1000;
         private IJSObjectReference? _module;
         private DotNetObjectReference<Index>? _selfReference;
 
@@ -27,7 +27,6 @@ namespace Blazor.PaintJS.Pages
 
         private bool _fileSystemAccessSupported = false;
         private Canvas? _canvas;
-        private ElementReference? _clickBtn;
         private Point? _previousPoint;
 
         // Method which is JSInvokable must be public
@@ -35,6 +34,13 @@ namespace Blazor.PaintJS.Pages
         public void OnPointerUp()
         {
             _previousPoint = null;
+        }
+
+        [JSInvokable]
+        public async Task DrawImageAsync()
+        {
+            await using var context = await _canvas!.GetContext2DAsync();
+            await context.DrawImageAsync("image", 0, 0);
         }
 
         protected override async Task OnInitializedAsync()
@@ -58,12 +64,8 @@ namespace Blazor.PaintJS.Pages
                     if (_module == null)
                     {
                         _module = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Index.razor.js");
+                        await _module.InvokeVoidAsync("initializeLaunchQueue", _selfReference);
                     }
-                    await _module.InvokeVoidAsync("initializeLaunchQueue", _selfReference);
-                    //if (_clickBtn.HasValue)
-                    //{
-                    //    await _clipboardService.CopyCanavasAsync(_clickBtn.Value);
-                    //}
                 }
                 catch (Exception ex)
                 {
@@ -108,14 +110,14 @@ namespace Blazor.PaintJS.Pages
             }
         }
 
-        private async Task Open(InputFileChangeEventArgs args)
+        private async Task OpenFile(InputFileChangeEventArgs args)
         {
             await using var context = await _canvas!.GetContext2DAsync();
-            await _imageService.OpenAsync(args.File.OpenReadStream(maxFileSize));
+            await _imageService.OpenAsync(args.File.OpenReadStream(1024 * 15 * 1000));
             await context.DrawImageAsync("image", 0, 0);
         }
 
-        private async Task OpenFile()
+        private async Task OpenLocalFile()
         {
             if (_fileHandle != null)
             {
@@ -144,19 +146,19 @@ namespace Blazor.PaintJS.Pages
                 {
                     var file = await _fileHandle.GetFileAsync();
                     Console.WriteLine(file.Name);
-                    await _imageService.OpenFileAsync(file.JSReference);
+                    await _imageService.OpenFileAccessAsync(file.JSReference);
                     await using var context = await _canvas!.GetContext2DAsync();
                     await context.DrawImageAsync("image", 0, 0);
                 }
             }
         }
 
-        private async Task Save()
+        private async Task DownloadFile()
         {
             await _imageService.SaveAsync(await _canvas!.ToDataURLAsync());
         }
 
-        private async Task SaveFile()
+        private async Task SaveFileLocal()
         {
             if (_fileHandle != null)
             {
@@ -173,22 +175,26 @@ namespace Blazor.PaintJS.Pages
         private async void Copy()
         {
             var dataUrl = await _canvas!.ToDataURLAsync();
-            await _clipboardService.CopyAsync(dataUrl);
+            // await _clipboardService.CopyAsync(dataUrl);
         }
 
         private async Task Paste()
         {
-            var success = await _clipboardService.PasteAsync();
-            if (success)
-            {
-                await using var context = await _canvas!.GetContext2DAsync();
-                await context.DrawImageAsync("image", 0, 0);
-            }
+            // var success = await _clipboardService.PasteAsync();
+            //if (success)
+            //{
+            //    await using var context = await _canvas!.GetContext2DAsync();
+            //    await context.DrawImageAsync("image", 0, 0);
+            //}
         }
 
         private async Task Share()
         {
-            await _shareService.ShareAsync(await _canvas!.ToDataURLAsync());
+            var fileReference = await _imageService.GenerateFileReference(await _canvas!.ToDataURLAsync());
+            await _shareService.ShareAsync(new WebShareDataModel
+            {
+                Files = new[] { fileReference }
+            });
         }
 
         private async Task Cleanup()
@@ -203,13 +209,6 @@ namespace Blazor.PaintJS.Pages
         {
             await using var context = await _canvas!.GetContext2DAsync();
             await context.FillStyleAsync(args.Value?.ToString());
-        }
-
-        [JSInvokable]
-        public async Task DrawImageAsync()
-        {
-            await using var context = await _canvas!.GetContext2DAsync();
-            await context.DrawImageAsync("image", 0, 0);
-        }
+        }       
     }
 }

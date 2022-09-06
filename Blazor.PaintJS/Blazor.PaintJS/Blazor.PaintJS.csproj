@@ -12,6 +12,7 @@
     <PackageReference Include="KristofferStrube.Blazor.FileSystemAccess" Version="1.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.8" PrivateAssets="all" />
+    <PackageReference Include="Thinktecture.Blazor.WebShare" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,7 +22,6 @@
   <ItemGroup>
     <None Include="wwwroot\js\ClipboardService.js" />
     <None Include="wwwroot\js\ImageService.js" />
-    <None Include="wwwroot\js\ShareService.js" />
   </ItemGroup>
 
 </Project>

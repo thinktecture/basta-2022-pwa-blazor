@@ -3,6 +3,7 @@ using Blazor.PaintJS.Services;
 using KristofferStrube.Blazor.FileSystemAccess;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Thinktecture.Blazor.WebShare;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -12,9 +13,9 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 builder.Services.AddFileSystemAccessService();
 
-builder.Services.AddScoped<ClipboardService>();
 builder.Services.AddScoped<ImageService>();
 builder.Services.AddScoped<PaintService>();
-builder.Services.AddScoped<ShareService>();
+
+builder.Services.AddWebShareService();
 
 await builder.Build().RunAsync();

@@ -5,11 +5,11 @@
 <nav>
     <input type="color" @onchange="OnColorChange">
     @if(_fileSystemAccessSupported) {
-        <button @onclick="OpenFile">Open file</button>
-        <button @onclick="SaveFile">Save file</button>
+        <button @onclick="OpenLocalFile">Open file</button>
+        <button @onclick="SaveFileLocal">Save file</button>
     } else {
-        <InputFile OnChange="Open"></InputFile>
-        <button @onclick="Save">Save</button>
+        <InputFile OnChange="(Func<InputFileChangeEventArgs, Task>)OpenFile"></InputFile>
+        <button @onclick="DownloadFile">Download</button>
     }
     @*<button @ref="_clickBtn">Copy</button>*@
     <button @onclick="Copy">Copy</button>

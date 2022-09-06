@@ -1,4 +1,5 @@
-﻿export function registerEvents(id, component) {
+﻿// TODO: Add comment
+export function registerEvents(id, component) {
     const target = document.getElementById(id);
     document.querySelector('body').addEventListener('pointerup', (pointerEvent) => {
         if (pointerEvent.target !== target) {

@@ -1,14 +1,15 @@
-﻿using Excubo.Blazor.Canvas;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.JSInterop;
+﻿using Microsoft.JSInterop;
 
 namespace Blazor.PaintJS.Services
 {
-    public class ImageService : JSServiceBase
+    public class ImageService : IAsyncDisposable
     {
+        protected readonly Lazy<Task<IJSObjectReference>> _moduleTask;
+
         public ImageService(IJSRuntime jsRuntime)
-            :base(jsRuntime)
         {
+            _moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>(
+               "import", $"./js/{GetType().Name}.js").AsTask());
         }
 
         public async Task OpenAsync(Stream stream)
@@ -18,10 +19,10 @@ namespace Blazor.PaintJS.Services
             await module.InvokeVoidAsync("createImage", currentStream);
         }
 
-        public async Task OpenFileAsync(IJSObjectReference reference)
+        public async Task OpenFileAccessAsync(IJSObjectReference reference)
         {
             var module = await _moduleTask.Value;
-            await module.InvokeVoidAsync("readImage", reference);
+            await module.InvokeVoidAsync("openNewFile", reference);
         }
 
         public async Task SaveAsync(string dataUrl)
@@ -34,6 +35,21 @@ namespace Blazor.PaintJS.Services
         {
             var module = await _moduleTask.Value;
             return await module.InvokeAsync<byte[]>("getCanvasImageData", canvasRefId);
+        }
+
+        public async Task<IJSObjectReference> GenerateFileReference(string dataUrl)
+        {
+            var module = await _moduleTask.Value;
+            return await module.InvokeAsync<IJSObjectReference>("generateFile", dataUrl);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_moduleTask.IsValueCreated)
+            {
+                var module = await _moduleTask.Value;
+                await module.DisposeAsync();
+            }
         }
     }
 }
