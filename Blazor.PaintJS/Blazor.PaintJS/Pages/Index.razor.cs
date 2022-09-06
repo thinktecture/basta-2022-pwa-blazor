@@ -6,6 +6,10 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Drawing;
 using KristofferStrube.Blazor.FileSystemAccess;
+using Thinktecture.Blazor.WebShare;
+using Thinktecture.Blazor.WebShare.Models;
+using Thinktecture.Blazor.AsyncClipboard;
+using Thinktecture.Blazor.AsyncClipboard.Models;
 
 namespace Blazor.PaintJS.Pages
 {
@@ -13,33 +17,36 @@ namespace Blazor.PaintJS.Pages
     {
         [Inject] private PaintService _paintService { get; set; } = default!;
         [Inject] private ImageService _imageService { get; set; } = default!;
-        [Inject] private ClipboardService _clipboardService { get; set; } = default!;
-        [Inject] private ShareService _shareService { get; set; } = default!;
+        [Inject] private AsyncClipboardService _asyncClipboardService { get; set; } = default!;
+        [Inject] private WebShareService _shareService { get; set; } = default!;
         [Inject] private FileSystemAccessService _fileSystemAccessService { get; set; } = default!;
         [Inject] public IJSRuntime JS { get; set; } = default!;
 
-
-        private long maxFileSize = 1024 * 15 * 1000;
         private IJSObjectReference? _module;
         private DotNetObjectReference<Index>? _selfReference;
 
         protected FileSystemFileHandle? _fileHandle;
 
-        private bool _fileSystemAccessSupported = false;
-        private Canvas? _canvas;
-        private ElementReference? _clickBtn;
+        private bool _fileSystemAccessSupported = true;
+        private bool _clipboardApiSupported = true;
+        private bool _shareApiSupported = true;
         private Point? _previousPoint;
 
-        // Method which is JSInvokable must be public
+        // EX 1
+
+        // EX 12
+
+        
+
         [JSInvokable]
-        public void OnPointerUp()
+        public async Task DrawImageAsync()
         {
-            _previousPoint = null;
+            //EX 16
         }
 
         protected override async Task OnInitializedAsync()
         {
-            _fileSystemAccessSupported = await _fileSystemAccessService.IsSupported();
+            //EX 17
             await base.OnInitializedAsync();
         }
 
@@ -49,21 +56,10 @@ namespace Blazor.PaintJS.Pages
             {
                 try
                 {
-                    await using var context = await _canvas!.GetContext2DAsync();
-                    await context.FillStyleAsync("white");
-                    await context.FillRectAsync(0, 0, 600, 480);
-                    await context.FillStyleAsync("black");
+                    //EX 2
+                    //EX 3
 
-                    _selfReference = DotNetObjectReference.Create(this);
-                    if (_module == null)
-                    {
-                        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Index.razor.js");
-                    }
-                    await _module.InvokeVoidAsync("initializeLaunchQueue", _selfReference);
-                    //if (_clickBtn.HasValue)
-                    //{
-                    //    await _clipboardService.CopyCanavasAsync(_clickBtn.Value);
-                    //}
+                    //EX16
                 }
                 catch (Exception ex)
                 {
@@ -71,6 +67,78 @@ namespace Blazor.PaintJS.Pages
                 }
             }
             await base.OnAfterRenderAsync(firstRender);
+        }
+
+        private async Task OnPointerMove(PointerEventArgs args)
+        {
+            //EX 4
+
+            //EX 5
+        }
+
+        private async void OnColorChange(ChangeEventArgs args)
+        {
+            //EX 6
+        }
+
+        private async Task SaveFileLocal()
+        {
+            try
+            {
+                //EX 11
+            }
+            catch
+            {
+                Console.WriteLine("Save file failed");
+            }
+            finally
+            {
+                _fileHandle = null;
+            }
+        }
+
+        private async Task OpenLocalFile()
+        {
+            // EX 12
+        }
+
+        private async void Copy()
+        {
+            //EX 13
+        }
+
+        private async Task Paste()
+        {
+            //EX 14
+        }
+
+        private async Task Share()
+        {
+            //EX 15
+        }
+
+        private async Task OpenFile(InputFileChangeEventArgs args)
+        {
+            await using var context = await _canvas!.GetContext2DAsync();
+            await _imageService.OpenAsync(args.File.OpenReadStream(1024 * 15 * 1000));
+            await context.DrawImageAsync("image", 0, 0);
+        }
+
+        private async Task DownloadFile()
+        {
+            //EX 18
+        }
+
+
+
+        
+
+        #region Utils
+        // Method which is JSInvokable must be public
+        [JSInvokable]
+        public void OnPointerUp()
+        {
+            _previousPoint = null;
         }
 
         private async void OnPointerDown(PointerEventArgs args)
@@ -87,129 +155,13 @@ namespace Blazor.PaintJS.Pages
             };
         }
 
-        private async Task OnPointerMove(PointerEventArgs args)
+        private async Task ResetCanvas()
         {
-            if (_previousPoint != null)
-            {
-                var currentPoint = new Point
-                {
-                    X = (int)Math.Floor(args.OffsetX),
-                    Y = (int)Math.Floor(args.OffsetY)
-                };
-
-                var points = _paintService.BrensenhamLine(_previousPoint.Value, currentPoint);
-                await using var context = await _canvas.GetContext2DAsync();
-                foreach (var point in points)
-                {
-                    await context.FillRectAsync(point.X, point.Y, 2, 2);
-                }
-
-                _previousPoint = currentPoint;
-            }
+            //await using var context = await _canvas!.GetContext2DAsync();
+            //await context.FillStyleAsync("white");
+            //await context.FillRectAsync(0, 0, 600, 480);
+            //await context.FillStyleAsync("black");
         }
-
-        private async Task Open(InputFileChangeEventArgs args)
-        {
-            await using var context = await _canvas!.GetContext2DAsync();
-            await _imageService.OpenAsync(args.File.OpenReadStream(maxFileSize));
-            await context.DrawImageAsync("image", 0, 0);
-        }
-
-        private async Task OpenFile()
-        {
-            if (_fileHandle != null)
-            {
-                await _fileHandle.JSReference.DisposeAsync();
-                _fileHandle = null;
-            }
-
-            try
-            {
-                OpenFilePickerOptionsStartInWellKnownDirectory options = new()
-                {
-                    Multiple = false,
-                    StartIn = WellKnownDirectory.Pictures
-                };
-                var fileHandles = await _fileSystemAccessService.ShowOpenFilePickerAsync(options);
-                _fileHandle = fileHandles.Single();
-            }
-            catch (JSException ex)
-            {
-                // Handle Exception or cancelation of File Access prompt
-                Console.WriteLine(ex);
-            }
-            finally
-            {
-                if (_fileHandle is not null)
-                {
-                    var file = await _fileHandle.GetFileAsync();
-                    Console.WriteLine(file.Name);
-                    await _imageService.OpenFileAsync(file.JSReference);
-                    await using var context = await _canvas!.GetContext2DAsync();
-                    await context.DrawImageAsync("image", 0, 0);
-                }
-            }
-        }
-
-        private async Task Save()
-        {
-            await _imageService.SaveAsync(await _canvas!.ToDataURLAsync());
-        }
-
-        private async Task SaveFile()
-        {
-            if (_fileHandle != null)
-            {
-                var writeable = await _fileHandle.CreateWritableAsync();
-                var test = await _imageService.GetImageData("paint-canvas");
-                await writeable.WriteAsync(test);
-                await writeable.CloseAsync();
-
-                await _fileHandle.JSReference.DisposeAsync();
-                _fileHandle = null;
-            }
-        }
-
-        private async void Copy()
-        {
-            var dataUrl = await _canvas!.ToDataURLAsync();
-            await _clipboardService.CopyAsync(dataUrl);
-        }
-
-        private async Task Paste()
-        {
-            var success = await _clipboardService.PasteAsync();
-            if (success)
-            {
-                await using var context = await _canvas!.GetContext2DAsync();
-                await context.DrawImageAsync("image", 0, 0);
-            }
-        }
-
-        private async Task Share()
-        {
-            await _shareService.ShareAsync(await _canvas!.ToDataURLAsync());
-        }
-
-        private async Task Cleanup()
-        {
-            await using var context = await _canvas!.GetContext2DAsync();
-            await context.FillStyleAsync("white");
-            await context.FillRectAsync(0, 0, 600, 480);
-            await context.FillStyleAsync("black");
-        }
-
-        private async void OnColorChange(ChangeEventArgs args)
-        {
-            await using var context = await _canvas!.GetContext2DAsync();
-            await context.FillStyleAsync(args.Value?.ToString());
-        }
-
-        [JSInvokable]
-        public async Task DrawImageAsync()
-        {
-            await using var context = await _canvas!.GetContext2DAsync();
-            await context.DrawImageAsync("image", 0, 0);
-        }
+        #endregion
     }
 }

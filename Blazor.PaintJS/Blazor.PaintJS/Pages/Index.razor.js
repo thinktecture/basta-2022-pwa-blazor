@@ -1,4 +1,5 @@
-﻿export function registerEvents(id, component) {
+﻿// TODO: Add comment
+export function registerEvents(id, component) {
     const target = document.getElementById(id);
     document.querySelector('body').addEventListener('pointerup', (pointerEvent) => {
         if (pointerEvent.target !== target) {
@@ -14,17 +15,12 @@
     });
 }
 
+export function getCanvasBlob(id) {
+    return new Promise((resolve) => document.getElementById(id).toBlob((blob) => resolve(blob)));
+}
+
 export async function initializeLaunchQueue(component) {
-    if ('launchQueue' in window) {
-        window.launchQueue.setConsumer(async params => {
-            const [handle] = params.files;
-            if (handle) {
-                const file = await handle.getFile();
-                await createImageElement(file);
-                component.invokeMethodAsync('DrawImageAsync');
-            }
-        });
-    }
+    //EX16
 }
 
 function unregisterEvents() {
