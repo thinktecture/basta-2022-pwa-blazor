@@ -167,12 +167,14 @@ namespace Blazor.PaintJS.Pages
             }
         }
 
+        //TODO: CL implement AsyncClipboard Service
         private async void Copy()
         {
             var dataUrl = await _canvas!.ToDataURLAsync();
             // await _clipboardService.CopyAsync(dataUrl);
         }
 
+        //TODO: CL implement AsyncClipboard Service
         private async Task Paste()
         {
             // var success = await _clipboardService.PasteAsync();
