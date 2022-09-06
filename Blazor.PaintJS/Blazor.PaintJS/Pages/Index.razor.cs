@@ -29,6 +29,12 @@ namespace Blazor.PaintJS.Pages
         private Canvas? _canvas;
         private Point? _previousPoint;
 
+        private readonly OpenFilePickerOptionsStartInWellKnownDirectory _filePickerOptions = new()
+        {
+            Multiple = false,
+            StartIn = WellKnownDirectory.Pictures
+        };
+
         // Method which is JSInvokable must be public
         [JSInvokable]
         public void OnPointerUp()
@@ -100,7 +106,7 @@ namespace Blazor.PaintJS.Pages
                 };
 
                 var points = _paintService.BrensenhamLine(_previousPoint.Value, currentPoint);
-                await using var context = await _canvas.GetContext2DAsync();
+                await using var context = await _canvas!.GetContext2DAsync();
                 foreach (var point in points)
                 {
                     await context.FillRectAsync(point.X, point.Y, 2, 2);
@@ -119,20 +125,9 @@ namespace Blazor.PaintJS.Pages
 
         private async Task OpenLocalFile()
         {
-            if (_fileHandle != null)
-            {
-                await _fileHandle.JSReference.DisposeAsync();
-                _fileHandle = null;
-            }
-
             try
             {
-                OpenFilePickerOptionsStartInWellKnownDirectory options = new()
-                {
-                    Multiple = false,
-                    StartIn = WellKnownDirectory.Pictures
-                };
-                var fileHandles = await _fileSystemAccessService.ShowOpenFilePickerAsync(options);
+                var fileHandles = await _fileSystemAccessService.ShowOpenFilePickerAsync(_filePickerOptions);
                 _fileHandle = fileHandles.Single();
             }
             catch (JSException ex)
@@ -155,7 +150,7 @@ namespace Blazor.PaintJS.Pages
 
         private async Task DownloadFile()
         {
-            await _imageService.SaveAsync(await _canvas!.ToDataURLAsync());
+            await _imageService.DownloadAsync(await _canvas!.ToDataURLAsync());
         }
 
         private async Task SaveFileLocal()
@@ -163,7 +158,7 @@ namespace Blazor.PaintJS.Pages
             if (_fileHandle != null)
             {
                 var writeable = await _fileHandle.CreateWritableAsync();
-                var test = await _imageService.GetImageData("paint-canvas");
+                var test = await _imageService.GetImageDataAsync("paint-canvas");
                 await writeable.WriteAsync(test);
                 await writeable.CloseAsync();
 
@@ -190,14 +185,14 @@ namespace Blazor.PaintJS.Pages
 
         private async Task Share()
         {
-            var fileReference = await _imageService.GenerateFileReference(await _canvas!.ToDataURLAsync());
+            var fileReference = await _imageService.GenerateFileReferenceAsync(await _canvas!.ToDataURLAsync());
             await _shareService.ShareAsync(new WebShareDataModel
             {
                 Files = new[] { fileReference }
             });
         }
 
-        private async Task Cleanup()
+        private async Task ResetCanvas()
         {
             await using var context = await _canvas!.GetContext2DAsync();
             await context.FillStyleAsync("white");

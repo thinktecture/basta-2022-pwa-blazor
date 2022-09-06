@@ -25,19 +25,19 @@ namespace Blazor.PaintJS.Services
             await module.InvokeVoidAsync("openNewFile", reference);
         }
 
-        public async Task SaveAsync(string dataUrl)
+        public async Task DownloadAsync(string dataUrl)
         {
             var module = await _moduleTask.Value;
-            await module.InvokeVoidAsync("saveImage", dataUrl);
+            await module.InvokeVoidAsync("downloadImage", dataUrl);
         }
         
-        public async Task<byte[]> GetImageData(string canvasRefId)
+        public async Task<byte[]> GetImageDataAsync(string canvasRefId)
         {
             var module = await _moduleTask.Value;
             return await module.InvokeAsync<byte[]>("getCanvasImageData", canvasRefId);
         }
 
-        public async Task<IJSObjectReference> GenerateFileReference(string dataUrl)
+        public async Task<IJSObjectReference> GenerateFileReferenceAsync(string dataUrl)
         {
             var module = await _moduleTask.Value;
             return await module.InvokeAsync<IJSObjectReference>("generateFile", dataUrl);

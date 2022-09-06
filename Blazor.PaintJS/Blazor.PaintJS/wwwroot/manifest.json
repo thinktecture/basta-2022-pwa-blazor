@@ -3,8 +3,8 @@
   "short_name": "PJS",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#03173d",
+  "background_color": "#808080",
+  "theme_color": "#000080",
   "prefer_related_applications": false,
   "file_handlers": [
     {

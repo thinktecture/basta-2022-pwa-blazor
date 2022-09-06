@@ -1,13 +1,13 @@
 ﻿let image = null;
 
 export async function createImage(stream) {
-    cleanUpImage();
+    resetImage();
     const arrayBuffer = await stream.arrayBuffer();
     const blob = new Blob([arrayBuffer]);
     return createImageElement(blob);
 }
 
-export function saveImage(dataUrl) {
+export function downloadImage(dataUrl) {
     const link = document.createElement("a");
     link.href = dataUrl;
     link.download = 'image.png';
@@ -35,7 +35,7 @@ export async function getCanvasImageData(referenceCanvasId) {
 }
 
 export async function openNewFile(imageBlob) {
-    cleanUpImage();
+    resetImage();
     return createImageElement(imageBlob)
 }
 
@@ -63,7 +63,7 @@ function createImageElement(blob, returnValue) {
     });
 }
 
-function cleanUpImage() {
+function resetImage() {
     if (image) {
         image.remove();
         image = null;
