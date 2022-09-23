@@ -15,6 +15,10 @@ export function registerEvents(id, component) {
     });
 }
 
+export function getCanvasBlob(id) {
+    return new Promise((resolve) => document.getElementById(id).toBlob((blob) => resolve(blob)));
+}
+
 export async function initializeLaunchQueue(component) {
     if ('launchQueue' in window) {
         window.launchQueue.setConsumer(async params => {

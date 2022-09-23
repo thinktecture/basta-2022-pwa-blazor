@@ -8,6 +8,8 @@ using System.Drawing;
 using KristofferStrube.Blazor.FileSystemAccess;
 using Thinktecture.Blazor.WebShare;
 using Thinktecture.Blazor.WebShare.Models;
+using Thinktecture.Blazor.AsyncClipboard;
+using Thinktecture.Blazor.AsyncClipboard.Models;
 
 namespace Blazor.PaintJS.Pages
 {
@@ -15,7 +17,7 @@ namespace Blazor.PaintJS.Pages
     {
         [Inject] private PaintService _paintService { get; set; } = default!;
         [Inject] private ImageService _imageService { get; set; } = default!;
-        // [Inject] private ClipboardService _clipboardService { get; set; } = default!;
+        [Inject] private AsyncClipboardService _asyncClipboardService { get; set; } = default!;
         [Inject] private WebShareService _shareService { get; set; } = default!;
         [Inject] private FileSystemAccessService _fileSystemAccessService { get; set; } = default!;
         [Inject] public IJSRuntime JS { get; set; } = default!;
@@ -167,26 +169,33 @@ namespace Blazor.PaintJS.Pages
             }
         }
 
-        //TODO: CL implement AsyncClipboard Service
         private async void Copy()
         {
-            var dataUrl = await _canvas!.ToDataURLAsync();
-            // await _clipboardService.CopyAsync(dataUrl);
+            // TODO: Discuss module retrieval
+            var imagePromise = _asyncClipboardService.GetObjectReference(_module!, "getCanvasBlob", "paint-canvas");
+            var clipboardItem = new ClipboardItem(new Dictionary<string, IJSObjectReference>
+            {
+                { "image/png", imagePromise }
+            });
+            await _asyncClipboardService.WriteAsync(new[] { clipboardItem });
         }
 
-        //TODO: CL implement AsyncClipboard Service
         private async Task Paste()
         {
-            // var success = await _clipboardService.PasteAsync();
-            //if (success)
-            //{
-            //    await using var context = await _canvas!.GetContext2DAsync();
-            //    await context.DrawImageAsync("image", 0, 0);
-            //}
+            var clipboardItems = await _asyncClipboardService.ReadAsync();
+            var pngItem = clipboardItems.FirstOrDefault(c => c.Types.Contains("image/png"));
+            if (pngItem is not null)
+            {
+                var blob = await pngItem.GetTypeAsync("image/png");
+                await _imageService.OpenFileAccessAsync(blob);
+                await using var context = await _canvas!.GetContext2DAsync();
+                await context.DrawImageAsync("image", 0, 0);
+            }
         }
 
         private async Task Share()
         {
+            // TODO: Should reuse blob from copy.
             var fileReference = await _imageService.GenerateFileReferenceAsync(await _canvas!.ToDataURLAsync());
             await _shareService.ShareAsync(new WebShareDataModel
             {
