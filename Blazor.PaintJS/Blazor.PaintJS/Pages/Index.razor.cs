@@ -27,15 +27,35 @@ namespace Blazor.PaintJS.Pages
 
         protected FileSystemFileHandle? _fileHandle;
 
-        private bool _fileSystemAccessSupported = false;
-        private Canvas? _canvas;
-        private Point? _previousPoint;
+        private static FilePickerAcceptType[] _acceptedTypes = new FilePickerAcceptType[]
+        {
+            new FilePickerAcceptType
+            {
+                Accept = new Dictionary<string, string[]>
+                {
+                    { "image/png", new[] {".png" } }
+                }
+            }
+        };
 
-        private readonly OpenFilePickerOptionsStartInWellKnownDirectory _filePickerOptions = new()
+        private SaveFilePickerOptionsStartInWellKnownDirectory _savePickerOptions = new SaveFilePickerOptionsStartInWellKnownDirectory
+        {
+            StartIn = WellKnownDirectory.Pictures,
+            Types = _acceptedTypes
+        };
+
+        private OpenFilePickerOptionsStartInWellKnownDirectory _openFilePickerOptions = new OpenFilePickerOptionsStartInWellKnownDirectory
         {
             Multiple = false,
-            StartIn = WellKnownDirectory.Pictures
+            StartIn = WellKnownDirectory.Pictures,
+            Types = _acceptedTypes
         };
+
+        private bool _fileSystemAccessSupported = false;
+        private bool _clipBoardApiSupported = false;
+        private bool _sharedApiSupported = false;
+        private Canvas? _canvas;
+        private Point? _previousPoint;
 
         // Method which is JSInvokable must be public
         [JSInvokable]
@@ -54,6 +74,8 @@ namespace Blazor.PaintJS.Pages
         protected override async Task OnInitializedAsync()
         {
             _fileSystemAccessSupported = await _fileSystemAccessService.IsSupported();
+            _clipBoardApiSupported = await _asyncClipboardService.IsSupportedAsync();
+            _sharedApiSupported = await _shareService.IsSupportedAsync();
             await base.OnInitializedAsync();
         }
 
@@ -129,7 +151,7 @@ namespace Blazor.PaintJS.Pages
         {
             try
             {
-                var fileHandles = await _fileSystemAccessService.ShowOpenFilePickerAsync(_filePickerOptions);
+                var fileHandles = await _fileSystemAccessService.ShowOpenFilePickerAsync(_openFilePickerOptions);
                 _fileHandle = fileHandles.Single();
             }
             catch (JSException ex)
@@ -157,14 +179,27 @@ namespace Blazor.PaintJS.Pages
 
         private async Task SaveFileLocal()
         {
-            if (_fileHandle != null)
+            try
             {
+                if (_fileHandle == null)
+                {
+                    _fileHandle = await _fileSystemAccessService.ShowSaveFilePickerAsync(_savePickerOptions);
+                }
+
                 var writeable = await _fileHandle.CreateWritableAsync();
                 var test = await _imageService.GetImageDataAsync("paint-canvas");
                 await writeable.WriteAsync(test);
                 await writeable.CloseAsync();
 
                 await _fileHandle.JSReference.DisposeAsync();
+                _fileHandle = null;
+            }
+            catch(Exception)
+            {
+                Console.WriteLine("Save file failed");
+            }
+            finally
+            {
                 _fileHandle = null;
             }
         }
@@ -215,6 +250,6 @@ namespace Blazor.PaintJS.Pages
         {
             await using var context = await _canvas!.GetContext2DAsync();
             await context.FillStyleAsync(args.Value?.ToString());
-        }       
+        }
     }
 }
