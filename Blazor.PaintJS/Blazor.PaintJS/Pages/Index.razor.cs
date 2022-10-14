@@ -119,9 +119,7 @@ namespace Blazor.PaintJS.Pages
 
         private async Task OpenFile(InputFileChangeEventArgs args)
         {
-            await using var context = await _canvas!.GetContext2DAsync();
-            await _imageService.OpenAsync(args.File.OpenReadStream(1024 * 15 * 1000));
-            await context.DrawImageAsync("image", 0, 0);
+            // EX 19
         }
 
         private async Task DownloadFile()
