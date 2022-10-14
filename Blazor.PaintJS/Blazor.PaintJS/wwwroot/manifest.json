@@ -5,5 +5,25 @@
   "display": "standalone",
   "background_color": "#808080",
   "theme_color": "#000080",
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "About Paint",
+      "short_name": "About",
+      "description": "Show information about Paint",
+      "url": "./",
+      "icons": [
+        {
+          "src": "icon-512.png",
+          "sizes": "512x512"
+        }
+      ]
+    }
+  ]
 }
