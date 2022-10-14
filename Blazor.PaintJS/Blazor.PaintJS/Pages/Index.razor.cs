@@ -68,7 +68,8 @@ namespace Blazor.PaintJS.Pages
                     _selfReference = DotNetObjectReference.Create(this);
                     if (_module == null)
                     {
-                        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Index.razor.js");
+                        _module = await JS.InvokeAsync<IJSObjectReference>(
+                            "import", "./Pages/Index.razor.js");
                     }
                     
 
@@ -122,6 +123,8 @@ namespace Blazor.PaintJS.Pages
         private async void OnColorChange(ChangeEventArgs args)
         {
             //EX 6
+            await using var context = await _canvas!.GetContext2DAsync(desynchronized: true);
+            await context.FillStyleAsync(args.Value?.ToString());
         }
 
         private async Task SaveFileLocal()
