@@ -37,6 +37,8 @@ function unregisterEvents() {
     document.querySelector('body').removeEventListener('pointerup', () => console.log('pointerup unregistered'));
 }
 
+let image = null;
+
 function createImageElement(blob, returnValue) {
     return new Promise((resolve, reject) => {
         const imageRef = new Image();
