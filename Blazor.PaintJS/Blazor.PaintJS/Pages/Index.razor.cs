@@ -117,19 +117,15 @@ namespace Blazor.PaintJS.Pages
             //EX 15
         }
 
-        private async Task OpenFile(InputFileChangeEventArgs args)
-        {
-            // EX 19
-        }
-
-        private async Task DownloadFile()
+        private async Task SaveFile()
         {
             //EX 18
         }
 
-
-
-        
+        private async Task OpenFile(InputFileChangeEventArgs args)
+        {
+            // EX 19
+        }
 
         #region Utils
         // Method which is JSInvokable must be public
