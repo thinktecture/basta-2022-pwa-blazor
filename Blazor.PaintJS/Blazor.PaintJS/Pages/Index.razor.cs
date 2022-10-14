@@ -222,11 +222,30 @@ namespace Blazor.PaintJS.Pages
         private async Task Paste()
         {
             //EX 14
+            var clipboardItems = await _asyncClipboardService.ReadAsync();
+            var pngItem = clipboardItems.FirstOrDefault(
+                            c => c.Types.Contains("image/png"));
+            if (pngItem is not null)
+            {
+                var blob = await pngItem.GetTypeAsync("image/png");
+                await _imageService.OpenFileAccessAsync(blob);
+                await using var context = await _canvas!.GetContext2DAsync();
+                await context.DrawImageAsync("image", 0, 0);
+            }
         }
 
         private async Task Share()
         {
             //EX 15
+            var fileReference = await _imageService.GenerateFileReferenceAsync(
+                    await _canvas!.ToDataURLAsync());
+
+            await _shareService.ShareAsync(
+                new WebShareDataModel
+                {
+                    Files = new[] { fileReference }
+                }
+            );
         }
 
         private async Task SaveFile()
