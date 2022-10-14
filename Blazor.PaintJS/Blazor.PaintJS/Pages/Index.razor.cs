@@ -65,6 +65,7 @@ namespace Blazor.PaintJS.Pages
                     await context.FillRectAsync(0, 0, 600, 480);
                     await context.FillStyleAsync("black");
 
+                    _selfReference = DotNetObjectReference.Create(this);
                     if (_module == null)
                     {
                         _module = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Index.razor.js");
