@@ -76,6 +76,11 @@ namespace Blazor.PaintJS.Pages
             //EX 5
         }
 
+        private async void OnPointerDown(PointerEventArgs args)
+        {
+            // EX 4
+        }
+
         private async void OnColorChange(ChangeEventArgs args)
         {
             //EX 6
@@ -134,21 +139,7 @@ namespace Blazor.PaintJS.Pages
         {
             _previousPoint = null;
         }
-
-        private async void OnPointerDown(PointerEventArgs args)
-        {
-            if (_module != null && _canvas!.AdditionalAttributes.TryGetValue("id", out var id))
-            {
-                await _module.InvokeVoidAsync("registerEvents", id, _selfReference);
-            }
-
-            _previousPoint = new Point
-            {
-                X = (int)Math.Floor(args.OffsetX),
-                Y = (int)Math.Floor(args.OffsetY)
-            };
-        }
-
+        
         private async Task ResetCanvas()
         {
             //await using var context = await _canvas!.GetContext2DAsync();
