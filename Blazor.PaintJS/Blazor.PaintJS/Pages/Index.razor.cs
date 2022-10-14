@@ -205,6 +205,18 @@ namespace Blazor.PaintJS.Pages
         private async void Copy()
         {
             //EX 13
+            var imagePromise = _asyncClipboardService.GetObjectReference(
+                _module!, "getCanvasBlob", "canvas");
+
+            var clipboardItem = new ClipboardItem(
+                new Dictionary<string, IJSObjectReference>
+                 {
+                        { "image/png", imagePromise }
+                 });
+
+            await _asyncClipboardService.WriteAsync(
+                new[] { clipboardItem }
+            );
         }
 
         private async Task Paste()
