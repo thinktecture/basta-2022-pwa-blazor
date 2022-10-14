@@ -65,6 +65,10 @@ namespace Blazor.PaintJS.Pages
                     await context.FillRectAsync(0, 0, 600, 480);
                     await context.FillStyleAsync("black");
 
+                    if (_module == null)
+                    {
+                        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Index.razor.js");
+                    }
                     
 
                     //EX16
@@ -80,16 +84,22 @@ namespace Blazor.PaintJS.Pages
         private async Task OnPointerMove(PointerEventArgs args)
         {
             //EX 4
-            await using var context = await _canvas!.GetContext2DAsync(desynchronized: true);
-
-            var currentPoint = new Point
+            if (_previousPoint != null)
             {
-                X = (int)Math.Floor(args.OffsetX),
-                Y = (int)Math.Floor(args.OffsetY)
-            };
+                var currentPoint = new Point
+                {
+                    X = (int)Math.Floor(args.OffsetX),
+                    Y = (int)Math.Floor(args.OffsetY)
+                };
 
-            await context.FillRectAsync(currentPoint.X, currentPoint.Y, 2, 2);
-
+                var points = _paintService.BrensenhamLine(_previousPoint.Value, currentPoint);
+                await using var context = await _canvas!.GetContext2DAsync(desynchronized: true);
+                foreach (var point in points)
+                {
+                    await context.FillRectAsync(point.X, point.Y, 2, 2);
+                }
+                _previousPoint = currentPoint;
+            }
             //EX 5
         }
 
