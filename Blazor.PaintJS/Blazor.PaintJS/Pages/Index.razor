@@ -6,8 +6,16 @@
     @*EX 17*@
 
     @*EX 11*@
-    <button @onclick="OpenLocalFile">Open</button>
-    <button @onclick="SaveFileLocal">Save</button>
+    @if (_fileSystemAccessSupported)
+    {
+        <button @onclick="OpenLocalFile">Open</button>
+        <button @onclick="SaveFileLocal">Save</button>
+    }
+    else
+    {
+        <InputFile OnChange="OpenFile"></InputFile>
+        <button @onclick="SaveFile">Download</button>
+    }
     <button @onclick="Copy">Copy</button>
     <button @onclick="Paste">Paste</button>
     <button @onclick="Share">Share</button>

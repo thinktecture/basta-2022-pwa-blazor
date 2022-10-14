@@ -72,6 +72,7 @@ namespace Blazor.PaintJS.Pages
         protected override async Task OnInitializedAsync()
         {
             //EX 17
+            _fileSystemAccessSupported = await _fileSystemAccessService.IsSupported();
             await base.OnInitializedAsync();
         }
 
