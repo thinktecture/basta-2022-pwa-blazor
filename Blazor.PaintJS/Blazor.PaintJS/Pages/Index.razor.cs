@@ -58,6 +58,12 @@ namespace Blazor.PaintJS.Pages
                 try
                 {
                     //EX 2
+                    await using var context = await _canvas!.GetContext2DAsync();
+
+                    await context.FillStyleAsync("white");
+                    await context.FillRectAsync(0, 0, 600, 480);
+                    await context.FillStyleAsync("black");
+
                     //EX 3
 
                     //EX16
