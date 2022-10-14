@@ -73,6 +73,8 @@ namespace Blazor.PaintJS.Pages
         {
             //EX 17
             _fileSystemAccessSupported = await _fileSystemAccessService.IsSupported();
+            _clipboardApiSupported = await _asyncClipboardService.IsSupportedAsync();
+            _shareApiSupported = await _shareService.IsSupportedAsync();
             await base.OnInitializedAsync();
         }
 
