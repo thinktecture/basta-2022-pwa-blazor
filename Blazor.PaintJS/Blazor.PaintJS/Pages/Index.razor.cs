@@ -36,7 +36,29 @@ namespace Blazor.PaintJS.Pages
         private Canvas? _canvas;
 
         // EX 12
+        private static FilePickerAcceptType[] _acceptTypes = new FilePickerAcceptType[]
+        {
+            new FilePickerAcceptType
+            {
+                Accept = new Dictionary<string, string[]> {
+                 { "image/png", new[] {".png" } }
+                },
+                Description = "PNG files"
+            }
+        };
 
+        private SaveFilePickerOptionsStartInWellKnownDirectory _savePickerOptions = new SaveFilePickerOptionsStartInWellKnownDirectory
+        {
+            StartIn = WellKnownDirectory.Pictures,
+            Types = _acceptTypes
+        };
+
+        private readonly OpenFilePickerOptionsStartInWellKnownDirectory _filePickerOptions = new()
+        {
+            Multiple = false,
+            StartIn = WellKnownDirectory.Pictures,
+            Types = _acceptTypes
+        };
 
 
         [JSInvokable]
@@ -71,7 +93,7 @@ namespace Blazor.PaintJS.Pages
                         _module = await JS.InvokeAsync<IJSObjectReference>(
                             "import", "./Pages/Index.razor.js");
                     }
-                    
+
 
                     //EX16
                 }
@@ -132,6 +154,19 @@ namespace Blazor.PaintJS.Pages
             try
             {
                 //EX 11
+                if (_fileHandle == null)
+                {
+                    _fileHandle = await _fileSystemAccessService
+                        .ShowSaveFilePickerAsync(_savePickerOptions);
+                }
+
+                var writeable = await _fileHandle.CreateWritableAsync();
+                var image = await _imageService.GetImageDataAsync("canvas");
+                await writeable.WriteAsync(image);
+                await writeable.CloseAsync();
+
+                await _fileHandle.JSReference.DisposeAsync();
+                _fileHandle = null;
             }
             catch
             {
@@ -146,6 +181,25 @@ namespace Blazor.PaintJS.Pages
         private async Task OpenLocalFile()
         {
             // EX 12
+            try
+            {
+                var fileHandles = await _fileSystemAccessService.ShowOpenFilePickerAsync(_filePickerOptions);
+                _fileHandle = fileHandles.Single();
+            }
+            catch (JSException ex)
+            {
+                Console.WriteLine(ex);
+            }
+            finally
+            {
+                if (_fileHandle is not null)
+                {
+                    var file = await _fileHandle.GetFileAsync();
+                    await _imageService.OpenFileAccessAsync(file.JSReference);
+                    await using var context = await _canvas!.GetContext2DAsync();
+                    await context.DrawImageAsync("image", 0, 0);
+                }
+            }
         }
 
         private async void Copy()
@@ -180,13 +234,13 @@ namespace Blazor.PaintJS.Pages
         {
             _previousPoint = null;
         }
-        
+
         private async Task ResetCanvas()
         {
-            //await using var context = await _canvas!.GetContext2DAsync();
-            //await context.FillStyleAsync("white");
-            //await context.FillRectAsync(0, 0, 600, 480);
-            //await context.FillStyleAsync("black");
+            await using var context = await _canvas!.GetContext2DAsync();
+            await context.FillStyleAsync("white");
+            await context.FillRectAsync(0, 0, 600, 480);
+            await context.FillStyleAsync("black");
         }
         #endregion
     }
