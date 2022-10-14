@@ -6,12 +6,17 @@
     @*EX 17*@
 
     @*EX 11*@
-    
+
     @*EX 6*@
 </nav>
 
 <div style="width: 100%; height: 100%; overflow: hidden; touch-action: none;">
     @*EX 1*@
-    <Canvas @ref="_canvas" height="480" width="600"></Canvas>
+    <Canvas id="canvas" 
+            @ref="_canvas"
+            @onpointerdown="OnPointerDown"
+            @onpointerup="OnPointerUp"
+            @onpointermove="OnPointerMove"
+            height="480" width="600"></Canvas>
     @*EX 4*@
 </div>
