@@ -257,6 +257,7 @@ namespace Blazor.PaintJS.Pages
         private async Task SaveFile()
         {
             //EX 18
+            await _imageService.DownloadAsync(await _canvas!.ToDataURLAsync());
         }
 
         private async Task OpenFile(InputFileChangeEventArgs args)
