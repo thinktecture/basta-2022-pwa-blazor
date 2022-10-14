@@ -21,8 +21,37 @@ export function getCanvasBlob(id) {
 
 export async function initializeLaunchQueue(component) {
     //EX16
+    if ('launchQueue' in window) {
+        window.launchQueue.setConsumer(async params => {
+            const [handle] = params.files;
+            if (handle) {
+                const file = await handle.getFile();
+                await createImageElement(file);
+                component.invokeMethodAsync('DrawImageAsync');
+            }
+        });
+    }
 }
 
 function unregisterEvents() {
     document.querySelector('body').removeEventListener('pointerup', () => console.log('pointerup unregistered'));
+}
+
+function createImageElement(blob, returnValue) {
+    return new Promise((resolve, reject) => {
+        const imageRef = new Image();
+        imageRef.onload = () => {
+            image = document.getElementById(imageRef.id);
+            resolve(returnValue);
+        };
+        imageRef.onerror = () => {
+            imageRef.remove();
+            reject();
+        };
+        imageRef.src = URL.createObjectURL(blob);
+        imageRef.style.display = 'none';
+        imageRef.id = 'image';
+
+        document.body.appendChild(imageRef);
+    });
 }

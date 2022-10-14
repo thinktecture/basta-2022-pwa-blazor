@@ -65,6 +65,8 @@ namespace Blazor.PaintJS.Pages
         public async Task DrawImageAsync()
         {
             //EX 16
+            await using var context = await _canvas!.GetContext2DAsync();
+            await context.DrawImageAsync("image", 0, 0);
         }
 
         protected override async Task OnInitializedAsync()
@@ -94,8 +96,9 @@ namespace Blazor.PaintJS.Pages
                             "import", "./Pages/Index.razor.js");
                     }
 
-
                     //EX16
+                    await _module.InvokeVoidAsync("initializeLaunchQueue", _selfReference);
+
                 }
                 catch (Exception ex)
                 {
