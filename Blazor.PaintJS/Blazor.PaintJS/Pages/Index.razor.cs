@@ -33,10 +33,11 @@ namespace Blazor.PaintJS.Pages
         private Point? _previousPoint;
 
         // EX 1
+        private Canvas? _canvas;
 
         // EX 12
 
-        
+
 
         [JSInvokable]
         public async Task DrawImageAsync()
