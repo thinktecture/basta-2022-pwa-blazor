@@ -80,18 +80,7 @@ namespace Blazor.PaintJS.Pages
             _clipBoardApiSupported = await _asyncClipboardService.IsSupportedAsync();
             _sharedApiSupported = await _shareService.IsSupportedAsync();
 
-            if (await _fileHandlingService.IsSupportedAsync())
-            {
-                await _fileHandlingService.SetConsumerAsync(async (launchParams) =>
-                {
-                    if (launchParams.Files.First() is FileSystemFileHandle fileHandle)
-                    {
-                        var file = await fileHandle.GetFileAsync();
-                        await _imageService.OpenFileAccessAsync(file.JSReference);
-                        await DrawImageAsync();
-                    }
-                });
-            }
+            // TODO: File handling
 
             await base.OnInitializedAsync();
         }
@@ -123,6 +112,8 @@ namespace Blazor.PaintJS.Pages
 
         private async void OnPointerDown(PointerEventArgs args)
         {
+            // TODO: Badging API
+
             if (_module != null && _canvas!.AdditionalAttributes.TryGetValue("id", out var id))
             {
                 await _module.InvokeVoidAsync("registerEvents", id, _selfReference);
@@ -167,8 +158,7 @@ namespace Blazor.PaintJS.Pages
         {
             try
             {
-                var fileHandles = await _fileSystemAccessService.ShowOpenFilePickerAsync(_openFilePickerOptions);
-                _fileHandle = fileHandles.Single();
+                // File System Access API
             }
             catch (JSException ex)
             {
@@ -227,7 +217,7 @@ namespace Blazor.PaintJS.Pages
             {
                 { "image/png", imagePromise }
             });
-            await _asyncClipboardService.WriteAsync(new[] { clipboardItem });
+            // TODO: Async clipboard API
         }
 
         private async Task Paste()
