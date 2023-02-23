@@ -10,6 +10,8 @@ using Thinktecture.Blazor.WebShare;
 using Thinktecture.Blazor.WebShare.Models;
 using Thinktecture.Blazor.AsyncClipboard;
 using Thinktecture.Blazor.AsyncClipboard.Models;
+using Thinktecture.Blazor.FileHandling;
+using KristofferStrube.Blazor.FileSystem;
 
 namespace Blazor.PaintJS.Pages
 {
@@ -19,7 +21,8 @@ namespace Blazor.PaintJS.Pages
         [Inject] private ImageService _imageService { get; set; } = default!;
         [Inject] private AsyncClipboardService _asyncClipboardService { get; set; } = default!;
         [Inject] private WebShareService _shareService { get; set; } = default!;
-        [Inject] private FileSystemAccessService _fileSystemAccessService { get; set; } = default!;
+        [Inject] private IFileSystemAccessService _fileSystemAccessService { get; set; } = default!;
+        [Inject] private FileHandlingService _fileHandlingService { get; set; } = default!;
         [Inject] public IJSRuntime JS { get; set; } = default!;
 
         private IJSObjectReference? _module;
@@ -73,9 +76,23 @@ namespace Blazor.PaintJS.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            _fileSystemAccessSupported = await _fileSystemAccessService.IsSupported();
+            _fileSystemAccessSupported = await _fileSystemAccessService.IsSupportedAsync();
             _clipBoardApiSupported = await _asyncClipboardService.IsSupportedAsync();
             _sharedApiSupported = await _shareService.IsSupportedAsync();
+
+            if (await _fileHandlingService.IsSupportedAsync())
+            {
+                await _fileHandlingService.SetConsumerAsync(async (launchParams) =>
+                {
+                    if (launchParams.Files.First() is FileSystemFileHandle fileHandle)
+                    {
+                        var file = await fileHandle.GetFileAsync();
+                        await _imageService.OpenFileAccessAsync(file.JSReference);
+                        await DrawImageAsync();
+                    }
+                });
+            }
+
             await base.OnInitializedAsync();
         }
 
@@ -94,7 +111,6 @@ namespace Blazor.PaintJS.Pages
                     if (_module == null)
                     {
                         _module = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Index.razor.js");
-                        await _module.InvokeVoidAsync("initializeLaunchQueue", _selfReference);
                     }
                 }
                 catch (Exception ex)
@@ -164,7 +180,6 @@ namespace Blazor.PaintJS.Pages
                 if (_fileHandle is not null)
                 {
                     var file = await _fileHandle.GetFileAsync();
-                    Console.WriteLine(file.Name);
                     await _imageService.OpenFileAccessAsync(file.JSReference);
                     await using var context = await _canvas!.GetContext2DAsync();
                     await context.DrawImageAsync("image", 0, 0);

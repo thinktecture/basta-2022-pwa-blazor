@@ -4,6 +4,7 @@ using KristofferStrube.Blazor.FileSystemAccess;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Thinktecture.Blazor.AsyncClipboard;
+using Thinktecture.Blazor.FileHandling;
 using Thinktecture.Blazor.WebShare;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -19,5 +20,6 @@ builder.Services.AddScoped<PaintService>();
 
 builder.Services.AddAsyncClipboardService();
 builder.Services.AddWebShareService();
+builder.Services.AddFileHandlingService();
 
 await builder.Build().RunAsync();
